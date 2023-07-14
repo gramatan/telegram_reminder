@@ -25,4 +25,4 @@
 
 ## Разработка
 
-Бот разработан на Python, используя aiogram для взаимодействия с API Telegram и gspread для работы с Google Sheets.
+Бот разработан на Python, используя aiogram(main.py) или python-telegram-bot(ptb_main.py) для взаимодействия с API Telegram и gspread для работы с Google Sheets.
