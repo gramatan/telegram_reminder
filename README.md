@@ -1,6 +1,8 @@
 # Telegram Reminder Bot
 
 Этот проект представляет собой Telegram-бот, который отправляет задания пользователям в соответствии со списком заданий, загруженным из Google Sheets.
+   - main.py - с использованием aiogram
+   - ptb_main.py - с использованием Python-telegram-bot
 
 ## Установка
 
