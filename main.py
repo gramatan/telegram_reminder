@@ -11,8 +11,8 @@ from aiogram.utils import executor
 from config import TOKEN
 
 
-logging.basicConfig(level=logging.DEBUG)
-# logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 # Google Sheets Auth
@@ -32,6 +32,8 @@ manager_chat_id = '123160759'  # ID менеджера
 
 task_status = {}  # Сохраняем таски тут
 
+
+@dp.message_handler(commands='start')
 async def send_task(message: types.Message):
     tel_id = str(message.from_user.id)
     records = sheet.get_all_records()
@@ -54,8 +56,8 @@ async def send_task(message: types.Message):
 
             asyncio.create_task(check_response(tel_id, int(answer_time)))
 
-dp.register_message_handler(send_task, commands='start')
 
+@dp.callback_query_handler(lambda c: c.data and c.data in ['Готово', 'Провалено'])
 async def button_callback(query: types.CallbackQuery):
     await bot.answer_callback_query(query.id)
 
@@ -66,7 +68,32 @@ async def button_callback(query: types.CallbackQuery):
 
     await bot.send_message(chat_id=manager_chat_id, text=f"User {query.from_user.id} selected {query.data}")
 
-dp.register_callback_query_handler(button_callback, lambda c: c.data and c.data in ['Готово', 'Провалено'])
+@dp.message_handler(commands='send_tasks')
+async def manager_send_tasks(message: types.Message):
+    if message.from_user.id == int(manager_chat_id):    # проверка на менеджера
+        records = sheet.get_all_records()
+
+        for i, record in enumerate(records, start=2):
+            tel_id = record['tel_id']
+            text = record['text']
+            answer_time = record['answer_time']
+
+            keyboard = types.InlineKeyboardMarkup()
+            keyboard.add(types.InlineKeyboardButton("Выполнено", callback_data='done'))
+            keyboard.add(types.InlineKeyboardButton("Не сделано", callback_data='not_done'))
+
+            try:
+                await bot.send_message(chat_id=tel_id, text=text, reply_markup=keyboard)
+
+                task_status[tel_id] = 'pending'
+                logging.info(f'Sent task to user {tel_id}')
+
+                sheet.update_cell(i, 6, 'отправлено пользователю')  # не в условиях задачи. для отладки
+
+                asyncio.create_task(check_response(tel_id, int(answer_time)))
+            except Exception as e:
+                logging.error(f'Error while sending task to user {tel_id}: {e}')
+
 
 async def check_response(tel_id, answer_time):
     await asyncio.sleep(answer_time * 60)

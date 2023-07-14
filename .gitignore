@@ -1,4 +1,5 @@
 config.py
+key.json
 dnd_bot.db
 
 # Byte-compiled / optimized / DLL files
